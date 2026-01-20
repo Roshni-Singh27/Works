@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Management System</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel="stylesheet" href="style.css">
+</head>
+body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-graduation-cap"></i>
+                <h1>Student Management System</h1>
+            </div>
+            <div class="stats">
+                <div class="stat-box">
+                    <h3 id="totalStudents">0</h3>
+                    <p>Total Students</p>
+                </div>
+                <div class="stat-box">
+                    <h3 id="avgGrade">0.0</h3>
+                    <p>Avg. Grade</p>
+                </div>
+                <div class="stat-box">
+                    <h3 id="attendanceRate">0%</h3>
+                    <p>Attendance</p>
+                </div>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <aside class="sidebar">
+                <ul class="nav-menu">
+                    <li><a href="#" class="active" data-section="dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                    <li><a href="#" data-section="students"><i class="fas fa-users"></i> Students</a></li>
+                    <li><a href="#" data-section="add-student"><i class="fas fa-user-plus"></i> Add Student</a></li>
+                    <li><a href="#" data-section="grades"><i class="fas fa-chart-bar"></i> Grades</a></li>
+                    <li><a href="#" data-section="attendance"><i class="fas fa-calendar-check"></i> Attendance</a></li>
+                    <li><a href="#" data-section="reports"><i class="fas fa-file-alt"></i> Reports</a></li>
+                </ul>
+            </aside>
+
+            <main class="content-area">
+                <!-- Dashboard Section -->
+                <section id="dashboard" class="content-section">
+                    <h2 class="section-title">Dashboard Overview</h2>
+                    <div class="dashboard-cards">
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="fas fa-users card-icon"></i>
+                                <span class="card-value" id="cardTotalStudents">0</span>
+                            </div>
+                            <p class="card-title">Total Students</p>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="fas fa-chart-line card-icon"></i>
+                                <span class="card-value" id="cardAvgGrade">0.0</span>
+                            </div>
+                            <p class="card-title">Average Grade</p>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="fas fa-calendar-alt card-icon"></i>
+                                <span class="card-value" id="cardAttendance">0%</span>
+                            </div>
+                            <p class="card-title">Attendance Rate</p>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="fas fa-star card-icon"></i>
+                                <span class="card-value" id="cardTopStudent">N/A</span>
+                            </div>
+                            <p class="card-title">Top Student</p>
+                        </div>
+                    </div>
+                    
+                    <div class="table-container" style="margin-top: 30px;">
+                        <h3 class="section-title">Recent Students</h3>
+                        <table id="recentStudentsTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Course</th>
+                                    <th>Grade</th>
+                                    <th>Attendance</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentStudentsBody">
+                                <!-- Recent students  -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Students List Section -->
+                <section id="students" class="content-section" style="display: none;">
+                    <h2 class="section-title">
+                        Students List
+                        <button class="btn" id="addStudentBtn">
+                            <i class="fas fa-plus"></i> Add New Student
+                        </button>
+                    </h2>
+                    <div class="table-container">
+                        <table id="studentsTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Course</th>
+                                    <th>Grade</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="studentsBody">
+                                <!-- Students -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Add Student Section -->
+                <section id="add-student" class="content-section" style="display: none;">
+                    <h2 class="section-title">Add New Student</h2>
+                    <div class="form-container">
+                        <form id="addStudentForm">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="firstName">First Name</label>
+                                    <input type="text" id="firstName" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="lastName">Last Name</label>
+                                    <input type="text" id="lastName" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="email">Email Address</label>
+                                    <input type="email" id="email" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="phone">Phone Number</label>
+                                    <input type="tel" id="phone" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="course">Course</label>
+                                    <select id="course" required>
+                                        <option value="">Select Course</option>
+                                        <option value="Computer Science">Computer Science</option>
+                                        <option value="Business Administration">Business Administration</option>
+                                        <option value="Engineering">Engineering</option>
+                                        <option value="Medicine">Medicine</option>
+                                        <option value="Law">Law</option>
+                                        <option value="Arts">Arts</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="grade">Grade</label>
+                                    <select id="grade" required>
+                                        <option value="">Select Grade</option>
+                                        <option value="A">A</option>
+                                        <option value="B">B</option>
+                                        <option value="C">C</option>
+                                        <option value="D">D</option>
+                                        <option value="F">F</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="address">Address</label>
+                                <input type="text" id="address" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="dob">Date of Birth</label>
+                                <input type="date" id="dob" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-save"></i> Save Student
+                                </button>
+                                <button type="reset" class="btn">
+                                    <i class="fas fa-redo"></i> Reset Form
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+
+                <!-- Grades Section -->
+                <section id="grades" class="content-section" style="display: none;">
+                    <h2 class="section-title">Grades Management</h2>
+                    <div class="table-container">
+                        <table id="gradesTable">
+                            <thead>
+                                <tr>
+                                    <th>Student ID</th>
+                                    <th>Name</th>
+                                    <th>Course</th>
+                                    <th>Current Grade</th>
+                                    <th>Update Grade</th>
+                                    <th>Performance</th>
+                                </tr>
+                            </thead>
+                            <tbody id="gradesBody">
+                                <!-- Grades  -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Attendance Section -->
+                <section id="attendance" class="content-section" style="display: none;">
+                    <h2 class="section-title">
+                        Attendance Tracking
+                        <span id="attendanceDate">Today: <span id="currentDate"></span></span>
+                    </h2>
+                    <div class="attendance-grid" id="attendanceGrid">
+                        <!-- Attendance cards  -->
+                    </div>
+                    <div style="margin-top: 30px; text-align: center;">
+                        <button class="btn btn-success" id="saveAttendance">
+                            <i class="fas fa-save"></i> Save Attendance
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Reports Section -->
+                <section id="reports" class="content-section" style="display: none;">
+                    <h2 class="section-title">Reports & Analytics</h2>
+                    <div class="dashboard-cards">
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="fas fa-chart-pie card-icon"></i>
+                            </div>
+                            <h3>Grade Distribution</h3>
+                            <div id="gradeChart" style="height: 200px; margin-top: 15px;">
+                                <!-- Grade chart  -->
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="fas fa-university card-icon"></i>
+                            </div>
+                            <h3>Course Enrollment</h3>
+                            <div id="courseChart" style="height: 200px; margin-top: 15px;">
+                                <!-- Course chart  -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 30px;">
+                        <h3 class="section-title">Export Data</h3>
+                        <div style="display: flex; gap: 15px; margin-top: 20px;">
+                            <button class="btn" id="exportStudents">
+                                <i class="fas fa-file-csv"></i> Export Students CSV
+                            </button>
+                            <button class="btn" id="exportGrades">
+                                <i class="fas fa-file-excel"></i> Export Grades Excel
+                            </button>
+                            <button class="btn" id="exportAttendance">
+                                <i class="fas fa-file-pdf"></i> Export Attendance PDF
+                            </button>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+
+        <!-- Edit Student Modal -->
+        <div class="modal" id="editStudentModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Edit Student</h2>
+                    <button class="close-modal" id="closeEditModal">&times;</button>
+                </div>
+                <form id="editStudentForm">
+                    <input type="hidden" id="editStudentId">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editFirstName">First Name</label>
+                            <input type="text" id="editFirstName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editLastName">Last Name</label>
+                            <input type="text" id="editLastName" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editEmail">Email Address</label>
+                            <input type="email" id="editEmail" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editPhone">Phone Number</label>
+                            <input type="tel" id="editPhone" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editCourse">Course</label>
+                            <select id="editCourse" required>
+                                <option value="">Select Course</option>
+                                <option value="Computer Science">Computer Science</option>
+                                <option value="Business Administration">Business Administration</option>
+                                <option value="Engineering">Engineering</option>
+                                <option value="Medicine">Medicine</option>
+                                <option value="Law">Law</option>
+                                <option value="Arts">Arts</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="editGrade">Grade</label>
+                            <select id="editGrade" required>
+                                <option value="">Select Grade</option>
+                                <option value="A">A</option>
+                                <option value="B">B</option>
+                                <option value="C">C</option>
+                                <option value="D">D</option>
+                                <option value="F">F</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editAddress">Address</label>
+                        <input type="text" id="editAddress" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editDob">Date of Birth</label>
+                        <input type="date" id="editDob" required>
+                    </div>
+                    
+                    <div class="form-group" style="display: flex; gap: 10px;">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save"></i> Update Student
+                        </button>
+                        <button type="button" class="btn btn-danger" id="deleteStudentBtn">
+                            <i class="fas fa-trash"></i> Delete Student
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <footer>
+            <p>Student Management System &copy; 2023 | All Rights Reserved</p>
+            <p>Developed with <i class="fas fa-heart" style="color: #e74c3c;"></i> for Educational Institutions</p>
+        </footer>
+    </div>
+
+
+<script src="script.js"></script>
+</body>
+</html>

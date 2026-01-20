@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weather Dashboard</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+:root {
+  --bg:#e3f2fd;
+  --sidebar:#2196f3;
+  --card:#fff;
+  --text:#222;
+  --accent:#1976d2;
+  --shadow:rgba(0,0,0,.15);
+}
+body.dark {
+  --bg:#0f172a;
+  --sidebar:#1e293b;
+  --card:#1e293b;
+  --text:#e2e8f0;
+  --accent:#60a5fa;
+  --shadow:rgba(255,255,255,.1);
+}
+*{margin:0;padding:0;box-sizing:border-box;font-family:Poppins,sans-serif}
+body{background:var(--bg);color:var(--text);display:flex;min-height:100vh}
+
+/* Splash */
+#splash{
+position:fixed;inset:0;background:linear-gradient(135deg,#2196f3,#1976d2);
+display:flex;flex-direction:column;justify-content:center;align-items:center;
+color:white;z-index:9999}
+
+/* Sidebar */
+.sidebar{
+width:230px;background:var(--sidebar);color:white;
+padding:1.5rem;display:flex;flex-direction:column;justify-content:space-between}
+.sidebar h2{text-align:center;margin-bottom:2rem}
+.nav button,.theme-toggle{
+width:100%;margin-bottom:.7rem;padding:.7rem;
+border:none;border-radius:8px;cursor:pointer;
+background:rgba(255,255,255,.2);color:white}
+.nav button:hover,.theme-toggle:hover{background:rgba(255,255,255,.35)}
+
+/* Main */
+.main{flex:1;padding:2rem;display:flex;flex-direction:column;gap:2rem}
+.card{background:var(--card);padding:1.5rem;border-radius:1rem;
+box-shadow:0 4px 20px var(--shadow)}
+
+.search-bar{display:flex;gap:1rem;flex-wrap:wrap}
+.search-bar input{padding:.8rem;border-radius:8px;border:none;width:230px}
+.search-bar button{padding:.8rem 1.2rem;border:none;border-radius:8px;
+background:var(--accent);color:white;cursor:pointer}
+
+.weather-info{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap}
+.temp{font-size:2.5rem;color:var(--accent);font-weight:bold}
+
+.forecast{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem}
+.day{background:var(--card);padding:1rem;border-radius:1rem;
+box-shadow:0 4px 10px var(--shadow);text-align:center}
+
+#favList li{cursor:pointer;margin:.4rem 0}
+
+@media(max-width:768px){.sidebar{display:none}}
+</style>
+</head>
+
+<body>
+
+<!-- Splash -->
+<div id="splash">
+  <h1>🌦 Weather App</h1>
+  <p>Loading...</p>
+</div>
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <div>
+    <h2>🌦 Weather</h2>
+    <div class="nav">
+      <button onclick="scrollToSection('dashboard')">🏠 Dashboard</button>
+      <button onclick="getLocationWeather()">📍 My Location</button>
+      <button onclick="scrollToSection('airQuality')">🌫 Air Quality</button>
+      <button onclick="scrollToSection('alerts')">⚠ Alerts</button>
+      <button onclick="scrollToSection('settings')">⚙ Settings</button>
+    </div>
+  </div>
+  <div class="theme-toggle" id="themeToggle">🌙 Dark Mode</div>
+</div>
+
+<!-- Main -->
+<div class="main">
+
+<!-- Dashboard -->
+<div id="dashboard">
+  <div class="search-bar">
+    <input id="cityInput" placeholder="Enter city name">
+    <button onclick="getWeather()">Search</button>
+    <button onclick="addFavourite()">⭐</button>
+    <button onclick="toggleUnit()">°C / °F</button>
+  </div>
+
+  <div class="card" id="currentWeather"></div>
+
+  <div class="card">
+    <canvas id="tempChart"></canvas>
+  </div>
+
+  <div class="forecast" id="forecast"></div>
+</div>
+
+<div class="card" id="airQuality"></div>
+<div class="card" id="alerts"></div>
+
+<div class="card">
+  <h3>⭐ Favourites</h3>
+  <ul id="favList"></ul>
+</div>
+
+<div class="card" id="settings">
+  <h3>⚙ Settings</h3><br>
+  <label>🌡 Units:
+    <select onchange="changeUnit(this.value)">
+      <option value="metric">Celsius</option>
+      <option value="imperial">Fahrenheit</option>
+    </select>
+  </label><br><br>
+  <label>
+    🔄 Auto Refresh (10 min)
+    <input type="checkbox" onchange="toggleAutoRefresh(this.checked)">
+  </label>
+</div>
+
+</div>
+
+<script>
+const apiKey="fea9fcade9bc214388e01fdd3fc02397";
+let unit=localStorage.getItem("unit")||"metric";
+let chart;
+
+/* Splash */
+window.addEventListener("load",()=>{
+setTimeout(()=>document.getElementById("splash").style.display="none",2000);
+loadFavourites();
+getLocationWeather();
+});
+
+/* Scroll Navigation - Fixed name collision */
+function scrollToSection(id){
+  const element = document.getElementById(id);
+  if(element) element.scrollIntoView({behavior:"smooth"});
+}
+
+/* Theme */
+if(localStorage.getItem("theme")==="dark"){
+document.body.classList.add("dark");
+document.getElementById("themeToggle").textContent="☀ Light Mode";
+}
+document.getElementById("themeToggle").onclick=()=>{
+document.body.classList.toggle("dark");
+localStorage.setItem("theme",
+document.body.classList.contains("dark")?"dark":"light");
+document.getElementById("themeToggle").textContent=document.body.classList.contains("dark")?
+"☀ Light Mode":"🌙 Dark Mode";
+};
+
+/* Weather */
+async function getWeather(){
+const city=document.getElementById("cityInput").value.trim();
+if(!city)return;
+try{
+const [c,f]=await Promise.all([
+fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=${unit}`),
+fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=${unit}`)
+]);
+const current=await c.json();
+const forecast=await f.json();
+saveOffline({current,forecast:forecast.list});
+displayCurrent(current);
+displayForecast(forecast.list);
+drawChart(forecast.list);
+}catch(e){console.error(e);loadOffline();}
+}
+
+function displayCurrent(d){
+const u=unit==="metric"?"°C":"°F";
+document.getElementById("currentWeather").innerHTML=`
+<div class="weather-info">
+<div>
+<div class="temp">${d.main.temp.toFixed(1)}${u}</div>
+<div>${d.name}, ${d.sys.country}</div>
+<div>${d.weather[0].description}</div>
+</div>
+<img src="<https://openweathermap.org/img/wn/${d.weather>[0].icon}@2x.png">
+</div>`;
+showAlerts(d);
+getAQI(d.coord.lat,d.coord.lon);
+}
+
+function displayForecast(list){
+document.getElementById("forecast").innerHTML=list.filter(i=>i.dt_txt.includes("12:00"))
+.map(d=>`
+<div class="day">
+<div>${new Date(d.dt_txt).toDateString()}</div>
+<img src="<https://openweathermap.org/img/wn/${d.weather>[0].icon}.png">
+<div>${d.main.temp.toFixed(1)}${unit==="metric"?"°C":"°F"}</div>
+</div>`).join("");
+}
+
+function drawChart(list){
+if(chart)chart.destroy();
+const ctx = document.getElementById("tempChart").getContext("2d");
+chart=new Chart(ctx,{
+type:"line",
+data:{
+  labels:list.slice(0,8).map(i=>i.dt_txt.slice(11,16)),
+  datasets:[{ 
+    label: "Temperature",
+    data:list.slice(0,8).map(i=>i.main.temp),
+    fill: true,
+    borderColor: 'rgb(33, 150, 243)',
+    backgroundColor: 'rgba(33, 150, 243, 0.1)',
+    tension: 0.4
+  }]
+},
+options: {
+  responsive: true,
+  maintainAspectRatio: false
+}
+});
+}
+
+/* AQI */
+async function getAQI(lat,lon){
+try{
+const r=await fetch(`https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${apiKey}`);
+const d=await r.json();
+document.getElementById("airQuality").innerHTML=`<h3>🌫 AQI</h3>
+<p>AQI Level: ${d.list[0].main.aqi}</p>`;
+}catch(e){console.error(e);}
+}
+
+/* Alerts */
+function showAlerts(d){
+let msg="✅ No alerts";
+if(d.weather[0].main==="Thunderstorm")msg="⛈ Thunderstorm Alert!";
+if(d.main.temp>40 && unit==="metric")msg="🔥 Heatwave Alert!";
+document.getElementById("alerts").innerHTML=`<h3>⚠ Alerts</h3><p>${msg}</p>`;
+}
+
+/* Favourites */
+function addFavourite(){
+const cityElement=document.querySelector("#currentWeather .weather-info div div:nth-child(2)");
+if(!cityElement)return;
+const city=cityElement.textContent;
+let favs=JSON.parse(localStorage.getItem("favs"))||[];
+if(!favs.includes(city))favs.push(city);
+localStorage.setItem("favs",JSON.stringify(favs));
+loadFavourites();
+}
+function loadFavourites(){
+const favList=document.getElementById("favList");
+favList.innerHTML="";
+(JSON.parse(localStorage.getItem("favs"))||[]).forEach(c=>{
+const li=document.createElement("li");
+li.textContent=c;
+li.onclick=()=>{document.getElementById("cityInput").value=c.split(",")[0];getWeather();};
+favList.appendChild(li);
+});
+}
+
+/* Offline */
+function saveOffline(d){localStorage.setItem("offlineWeather",JSON.stringify(d))}
+function loadOffline(){
+const c=localStorage.getItem("offlineWeather");
+if(!c)return;
+const d=JSON.parse(c);
+displayCurrent(d.current);
+displayForecast(d.forecast);
+drawChart(d.forecast);
+document.getElementById("alerts").innerHTML="<h3>⚠ Alerts</h3><p>⚠ Offline data loaded</p>";
+}
+
+/* Location */
+function getLocationWeather(){
+if(navigator.geolocation){
+navigator.geolocation.getCurrentPosition(pos=>{
+fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&appid=${apiKey}&units=${unit}`)
+.then(r=>r.json()).then(displayCurrent).catch(console.error);
+},console.error);
+}
+}
+
+/* Settings */
+function toggleUnit(){
+unit=unit==="metric"?"imperial":"metric";
+localStorage.setItem("unit",unit);
+if(document.getElementById("cityInput").value)getWeather();
+}
+function changeUnit(v){
+unit=v;localStorage.setItem("unit",unit);
+if(document.getElementById("cityInput").value)getWeather();
+}
+function toggleAutoRefresh(e){
+if(e){window.auto=setInterval(getWeather,600000)}
+else clearInterval(window.auto);
+}
+</script>
+</body>
+</html>
